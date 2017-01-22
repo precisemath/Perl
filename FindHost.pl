@@ -5,11 +5,11 @@
 
 use strict;
 use Net::Ping;
-use Socket;
 use Sys::Hostname;
 use Getopt::Long;
 use Pod::Usage;
 use List::MoreUtils 'any';
+use Socket;
 
 #Variable declarations
 my ($net_addr,$mask_addr);
@@ -29,23 +29,42 @@ pod2usage(-exitval => 0, -verbose => 2) if $help;
 
 #Options processing
 if ($net_addr) {
+   print "Net Address = ".$net_addr."\n";
    $net_addr = inet_aton($net_addr) or die ("The passed address not in the required format. Example format is: 192.168.0\n");
-   $mask_addr = inet_aton($net_addr) & inet_aton('255.255.255.0');
+   #$net_addr = inet_pton($net_addr) or die ("The passed address not in the required format. Example format is: 192.168.0\n");
+   $mask_addr = $net_addr & inet_aton('255.255.255.0');
 }
 else {
 #Assign by default current IP Octet
   my $host = hostname();
-  my $net_addr = inet_ntoa( scalar gethostbyname( $host || 'localhost' ) );
+  print "Local Host = $host\n";
+
+  my $ip_addr = scalar gethostbyname( $host );
+
+  #If unable to resolve hostname to ipaddress
+  unless ($ip_addr) {
+    $ip_addr = scalar gethostbyname( 'localhost' );
+  }
+  
+  if ( ! defined $ip_addr ) {
+     print "Error: Unable to resolve hostname: $! \n";
+     exit(-1); 
+  }
+  my $net_addr = inet_ntoa( $ip_addr );
   print "Using current network address:".$net_addr."\n";
   $mask_addr = inet_aton($net_addr) & inet_aton('255.255.255.0');
+
   push ( @exclude_addrs, $net_addr );
 }
+
 print "Masked address is:". inet_ntoa ($mask_addr)."\n";
 
 #Now Validate Exclude addresses
 foreach my $ex_addr (@exclude_addrs) {
    die ("Invalid Exclude Address passed: $ex_addr\n") unless ( inet_aton ($ex_addr) );
 }
+
+print "Size of exclude_addrs:".@exclude_addrs."\n";
 
 #Now start the ping finally!
 for (my $c = 0; $c < 51; $c++) {
