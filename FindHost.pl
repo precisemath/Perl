@@ -8,7 +8,7 @@ use Net::Ping;
 use Sys::Hostname;
 use Getopt::Long;
 use Pod::Usage;
-use List::MoreUtils 'any';
+#use List::MoreUtils 'any';
 use Socket;
 
 #Variable declarations
@@ -93,7 +93,9 @@ sub startPing($) {
    for (my $c = 0; $c < 5; $c++) {
       my $octet = $start + $c;
 	  my $a_value = inet_ntoa($mask_addr | inet_aton("0.0.0.$octet") );
-      next if (any { /^$a_value$/ } @exclude_addrs);
+	  #next if (any { /^$a_value$/ } @exclude_addrs);
+	  my @temp = grep { /^$a_value$/ } @exclude_addrs;
+	  next if ($#temp >= 0);
 	  print "$a_value is active.\n" if $p->ping($a_value);
    }
    $p->close();
