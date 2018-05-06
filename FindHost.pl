@@ -96,7 +96,7 @@ sub startPing($) {
 	  #next if (any { /^$a_value$/ } @exclude_addrs);
 	  my @temp = grep { /^$a_value$/ } @exclude_addrs;
 	  next if ($#temp >= 0);
-	  print "$a_value is active.\n" if $p->ping($a_value);
+	  print "$a_value:".gethostbyaddr(inet_aton($a_value),AF_INET)." is active.\n" if $p->ping($a_value);
    }
    $p->close();
 }
